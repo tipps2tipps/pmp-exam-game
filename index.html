@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMP Quest: Project Manager's Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        @keyframes levelUp {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: scale(1) rotate(360deg); opacity: 1; }
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        .pulse { animation: pulse 2s infinite; }
+        .shake { animation: shake 0.5s ease-in-out; }
+        .level-up { animation: levelUp 0.8s ease-out; }
+        .sparkle { animation: sparkle 1.5s infinite; }
+        .float { animation: float 3s ease-in-out infinite; }
+        .glow { animation: glow 2s infinite; }
+        
+        .hp-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+            transition: width 0.5s ease-out;
+        }
+        .xp-bar {
+            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+            transition: width 0.5s ease-out;
+        }
+        .energy-bar {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            transition: width 0.5s ease-out;
+        }
+        
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #fbbf24, #f59e0b);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 1s ease-out forwards;
+        }
+        
+        @keyframes particle-float {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .boss-entrance {
+            animation: bossEntrance 1s ease-out;
+        }
+        
+        @keyframes bossEntrance {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        .damage-number {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ef4444;
+            animation: damageFloat 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes damageFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen text-white">
+    <div id="app"></div>
+    
+    <!-- Achievement Notification Container -->
+    <div id="achievement-container"></div>
+
+    <script>
+        // ==================== GAME DATA ====================
+        
+        const QUESTION_BANK = [
+            {
+                id: 1,
+                domain: "Stakeholder",
+                difficulty: "easy",
+                question: "What is the PRIMARY purpose of stakeholder engagement?",
+                options: [
+                    "To keep stakeholders happy at all costs",
+                    "To identify, understand, and manage stakeholder expectations and influence",
+                    "To minimize stakeholder interference",
+                    "To document all stakeholder requests"
+                ],
+                correct: 1,
+                explanation: "Stakeholder engagement is about proactively identifying stakeholders, understanding their needs and expectations, and managing their influence on the project.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 2,
+                domain: "Team",
+                difficulty: "medium",
+                question: "During which stage of team development do team members begin to work together productively?",
+                options: [
+                    "Forming",
+                    "Storming",
+                    "Norming",
+                    "Performing"
+                ],
+                correct: 3,
+                explanation: "The Performing stage is when the team operates at peak efficiency and productivity. Members work interdependently and smoothly toward the project goals.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 3,
+                domain: "Development",
+                difficulty: "hard",
+                question: "Your project has stable requirements for the first phase but high uncertainty for later phases. What approach should you use?",
+                options: [
+                    "Fully predictive throughout",
+                    "Fully adaptive throughout",
+                    "Hybrid: predictive for phase 1, adaptive for later phases",
+                    "Incremental only"
+                ],
+                correct: 2,
+                explanation: "A hybrid approach leverages predictive methods where requirements are stable and adaptive methods where there's uncertainty. This provides structure where possible while maintaining flexibility where needed.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 4,
+                domain: "Planning",
+                difficulty: "medium",
+                question: "What does the critical path represent in a project schedule?",
+                options: [
+                    "The shortest possible project duration",
+                    "The longest path through the project, determining minimum duration",
+                    "The most important tasks",
+                    "The path with the most resources"
+                ],
+                correct: 1,
+                explanation: "The critical path is the longest sequence of dependent activities. Any delay on the critical path delays the entire project. Activities on this path have zero float.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 5,
+                domain: "Work",
+                difficulty: "easy",
+                question: "Who approves or rejects change requests in a project?",
+                options: [
+                    "Project Manager",
+                    "Change Control Board or person with delegated authority",
+                    "Team members",
+                    "All stakeholders by vote"
+                ],
+                correct: 1,
+                explanation: "Change requests are reviewed and approved/rejected by the Change Control Board (CCB) or a designated authority. The PM may prepare recommendations but typically doesn't unilaterally approve changes.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 6,
+                domain: "Delivery",
+                difficulty: "hard",
+                question: "A stakeholder requests a feature that's not in scope. The team has capacity. What should you do FIRST?",
+                options: [
+                    "Add the feature immediately since there's capacity",
+                    "Reject it because it's out of scope",
+                    "Evaluate the value and impact, then follow change control process",
+                    "Wait until the next project"
+                ],
+                correct: 2,
+                explanation: "Even with capacity, all scope changes must be properly evaluated for value, impact, and trade-offs, then processed through change control. Having capacity doesn't bypass governance.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 7,
+                domain: "Measurement",
+                difficulty: "medium",
+                question: "If CPI = 0.85, what does this indicate?",
+                options: [
+                    "The project is under budget",
+                    "The project is over budget by 15%",
+                    "The project is getting $0.85 of value for every $1 spent",
+                    "The project will finish 15% early"
+                ],
+                correct: 2,
+                explanation: "CPI (Cost Performance Index) = EV/AC. A CPI of 0.85 means you're getting only $0.85 of earned value for every $1 of actual cost. The project is over budget and running inefficiently.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 8,
+                domain: "Uncertainty",
+                difficulty: "hard",
+                question: "What's the BEST response strategy for a high-impact negative risk that can be eliminated?",
+                options: [
+                    "Mitigate",
+                    "Transfer",
+                    "Avoid",
+                    "Accept"
+                ],
+                correct: 2,
+                explanation: "Avoid is the strategy that eliminates the risk entirely by changing the project plan. If you can eliminate a high-impact threat, that's typically the best choice.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 9,
+                domain: "Stakeholder",
+                difficulty: "medium",
+                question: "A stakeholder with high power but low interest should be:",
+                options: [
+                    "Managed closely",
+                    "Kept satisfied",
+                    "Kept informed",
+                    "Monitored"
+                ],
+                correct: 1,
+                explanation: "Using the Power/Interest Grid, stakeholders with high power but low interest should be 'kept satisfied.' They have the authority to impact the project but aren't deeply engaged, so keep them happy without overwhelming them.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 10,
+                domain: "Team",
+                difficulty: "easy",
+                question: "What leadership style focuses on serving the team and removing impediments?",
+                options: [
+                    "Autocratic",
+                    "Transactional",
+                    "Servant leadership",
+                    "Laissez-faire"
+                ],
+                correct: 2,
+                explanation: "Servant leadership prioritizes the needs of the team, focuses on their growth and well-being, and removes obstacles. The leader serves the team so they can perform optimally.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 11,
+                domain: "Development",
+                difficulty: "medium",
+                question: "Which Agile framework uses a 'pull system' and WIP limits?",
+                options: [
+                    "Scrum",
+                    "Kanban",
+                    "XP",
+                    "Crystal"
+                ],
+                correct: 1,
+                explanation: "Kanban is characterized by a pull system where work is pulled when capacity is available, and WIP (Work In Progress) limits prevent overload and maintain flow.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 12,
+                domain: "Planning",
+                difficulty: "hard",
+                question: "You need to compress the schedule. Fast tracking is risky. What should you analyze FIRST?",
+                options: [
+                    "Resource availability",
+                    "Activities on the critical path that can be crashed with lowest cost",
+                    "Stakeholder expectations",
+                    "Budget reserves"
+                ],
+                correct: 1,
+                explanation: "When crashing (adding resources to shorten duration), focus on critical path activities first, and choose those with the lowest cost per time unit saved. This optimizes cost-benefit.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 13,
+                domain: "Work",
+                difficulty: "medium",
+                question: "What is the purpose of a lessons learned register?",
+                options: [
+                    "To blame people for mistakes",
+                    "To document knowledge gained for future projects",
+                    "To track project issues",
+                    "To evaluate team performance"
+                ],
+                correct: 1,
+                explanation: "The lessons learned register captures knowledge gained throughout the project - what worked, what didn't, and recommendations - to improve future projects. It's about learning, not blame.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 14,
+                domain: "Delivery",
+                difficulty: "easy",
+                question: "What is an MVP (Minimum Viable Product)?",
+                options: [
+                    "The cheapest product you can build",
+                    "The smallest product that delivers value and enables learning",
+                    "The most valuable product features only",
+                    "A prototype that doesn't work"
+                ],
+                correct: 1,
+                explanation: "An MVP is the smallest version of a product that can be released to deliver value and enable validated learning from real users. It's about learning fast, not building cheap.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 15,
+                domain: "Measurement",
+                difficulty: "hard",
+                question: "Your project has: BAC=$1M, EV=$400K, AC=$500K, PV=$500K. What is the EAC using CPI?",
+                options: [
+                    "$1,000,000",
+                    "$1,250,000",
+                    "$800,000",
+                    "$625,000"
+                ],
+                correct: 1,
+                explanation: "EAC = BAC/CPI. First calculate CPI = EV/AC = 400K/500K = 0.8. Then EAC = 1M/0.8 = $1.25M. The project will cost more than budgeted due to poor cost performance.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 16,
+                domain: "Uncertainty",
+                difficulty: "medium",
+                question: "What does a risk trigger indicate?",
+                options: [
+                    "The risk has occurred",
+                    "A warning sign that the risk may occur soon",
+                    "The risk is no longer relevant",
+                    "The risk response plan failed"
+                ],
+                correct: 1,
+                explanation: "A risk trigger (or early warning sign) indicates that a risk is about to occur, allowing the team to activate response plans proactively before the risk fully materializes.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 17,
+                domain: "Stakeholder",
+                difficulty: "hard",
+                question: "Two key stakeholders have conflicting requirements. What should you do FIRST?",
+                options: [
+                    "Choose the senior stakeholder's requirement",
+                    "Implement both requirements",
+                    "Facilitate a meeting to understand underlying needs and find a solution",
+                    "Escalate to the sponsor immediately"
+                ],
+                correct: 2,
+                explanation: "Conflicting requirements often stem from different underlying needs. Facilitate discussion to understand the real needs, then collaborate on solutions. This may reveal creative options that satisfy both.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 18,
+                domain: "Team",
+                difficulty: "hard",
+                question: "Team velocity has been 30, 32, 28, 31. Management wants to increase it to 45. What's the PRIMARY concern?",
+                options: [
+                    "The team can't achieve 45",
+                    "Velocity is for planning capacity, not measuring performance; gaming it defeats its purpose",
+                    "You need to add more people",
+                    "You need better tools"
+                ],
+                correct: 1,
+                explanation: "Velocity is a planning tool to predict future capacity, not a performance metric to maximize. Artificially inflating velocity (inflating estimates, working unsustainably) makes it useless for planning and harms the team.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 19,
+                domain: "Development",
+                difficulty: "easy",
+                question: "What are the four Agile Manifesto values?",
+                options: [
+                    "Speed, Quality, Cost, Scope",
+                    "Individuals and interactions, Working software, Customer collaboration, Responding to change",
+                    "Planning, Executing, Monitoring, Controlling",
+                    "Scrum, Kanban, XP, Lean"
+                ],
+                correct: 1,
+                explanation: "The Agile Manifesto values: 1) Individuals and interactions over processes and tools, 2) Working software over comprehensive documentation, 3) Customer collaboration over contract negotiation, 4) Responding to change over following a plan.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 20,
+                domain: "Planning",
+                difficulty: "easy",
+                question: "What is the purpose of a Work Breakdown Structure (WBS)?",
+                options: [
+                    "To assign tasks to team members",
+                    "To decompose project scope into manageable components",
+                    "To create the project schedule",
+                    "To estimate project costs"
+                ],
+                correct: 1,
+                explanation: "The WBS hierarchically decomposses the total project scope into smaller, manageable work packages. It represents 100% of the project scope and is the foundation for planning, estimating, and control.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 21,
+                domain: "Work",
+                difficulty: "hard",
+                question: "During execution, you discover the business case assumptions are no longer valid. What should you do?",
+                options: [
+                    "Continue as planned; commitments were made",
+                    "Stop the project immediately",
+                    "Analyze the impact, update the business case, and recommend whether to continue, pivot, or terminate",
+                    "Ignore it; that's not the PM's concern"
+                ],
+                correct: 2,
+                explanation: "When business case assumptions become invalid, the project's justification may be at risk. Analyze the impact, update the business case, and make evidence-based recommendations to stakeholders about the project's future.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 22,
+                domain: "Delivery",
+                difficulty: "medium",
+                question: "What is the difference between Quality Control and Quality Assurance?",
+                options: [
+                    "They are the same thing",
+                    "QC inspects deliverables; QA ensures the process produces quality",
+                    "QC is for Agile; QA is for Waterfall",
+                    "QC is done by managers; QA is done by the team"
+                ],
+                correct: 1,
+                explanation: "Quality Control focuses on inspecting deliverables to detect defects. Quality Assurance focuses on the process that produces deliverables to prevent defects. QC is detection; QA is prevention.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 23,
+                domain: "Measurement",
+                difficulty: "easy",
+                question: "What does a burn-down chart show?",
+                options: [
+                    "Work completed over time",
+                    "Work remaining over time",
+                    "Team capacity over time",
+                    "Budget consumed over time"
+                ],
+                correct: 1,
+                explanation: "A burn-down chart displays work remaining over time, typically showing remaining story points or tasks versus time. It helps visualize whether the team is on track to complete work by the deadline.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 24,
+                domain: "Uncertainty",
+                difficulty: "easy",
+                question: "What is the difference between a risk and an issue?",
+                options: [
+                    "There is no difference",
+                    "A risk is uncertain (may happen); an issue has occurred",
+                    "Risks are negative; issues are positive",
+                    "Risks are for stakeholders; issues are for the team"
+                ],
+                correct: 1,
+                explanation: "A risk is an uncertain event that may or may not occur. An issue is a current problem that has already occurred and needs to be addressed now. Risks are future-focused; issues are present-focused.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 25,
+                domain: "Stakeholder",
+                difficulty: "medium",
+                question: "What is the purpose of a stakeholder engagement assessment matrix?",
+                options: [
+                    "To rate stakeholder performance",
+                    "To compare current vs. desired engagement levels and plan how to close gaps",
+                    "To decide which stakeholders to involve",
+                    "To allocate budget to stakeholders"
+                ],
+                correct: 1,
+                explanation: "The stakeholder engagement assessment matrix shows each stakeholder's current engagement level (Unaware, Resistant, Neutral, Supportive, Leading) versus the desired level, helping plan engagement strategies to close gaps.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 26,
+                domain: "Team",
+                difficulty: "medium",
+                question: "What conflict resolution technique seeks a solution that fully satisfies all parties?",
+                options: [
+                    "Compromise",
+                    "Smoothing",
+                    "Collaborate/Problem-solve",
+                    "Force"
+                ],
+                correct: 2,
+                explanation: "Collaborate (also called Problem-solve or Confront) seeks a win-win solution that fully satisfies all parties by addressing underlying concerns. It's the most effective long-term approach but requires time and goodwill.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 27,
+                domain: "Development",
+                difficulty: "hard",
+                question: "Your project needs detailed upfront requirements due to regulations, but you want rapid feedback. What approach?",
+                options: [
+                    "Pure waterfall",
+                    "Pure Agile",
+                    "Hybrid: detailed requirements documentation with incremental delivery and feedback loops",
+                    "Skip the regulations"
+                ],
+                correct: 2,
+                explanation: "Hybrid approaches can combine regulatory compliance (detailed documentation) with Agile benefits (incremental delivery, feedback). Document requirements as needed, then deliver and validate incrementally within that framework.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 28,
+                domain: "Planning",
+                difficulty: "medium",
+                question: "What does 'rolling wave planning' mean?",
+                options: [
+                    "Planning in ocean-themed sprints",
+                    "Detailed planning for near-term work, high-level for future work, refining as you progress",
+                    "Planning multiple projects simultaneously",
+                    "Continuous replanning without execution"
+                ],
+                correct: 1,
+                explanation: "Rolling wave planning is progressive elaboration: plan in detail what's happening soon, keep distant work at a high level, and refine as you get closer. This balances planning needs with adaptation to change.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 29,
+                domain: "Work",
+                difficulty: "medium",
+                question: "What is the primary purpose of a project charter?",
+                options: [
+                    "To create the project schedule",
+                    "To formally authorize the project and the PM's authority",
+                    "To document all requirements",
+                    "To assign tasks to team members"
+                ],
+                correct: 1,
+                explanation: "The project charter formally authorizes the project's existence and grants the project manager authority to apply resources. It's issued by a sponsor or initiator external to the project.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 30,
+                domain: "Delivery",
+                difficulty: "hard",
+                question: "The Definition of Done requires security testing, but it's slowing sprints. The team wants to remove it. What do you do?",
+                options: [
+                    "Remove it to speed up",
+                    "Keep it; don't compromise on 'done'",
+                    "Investigate why it's slow and how to make it faster, not whether to do it",
+                    "Make it optional"
+                ],
+                correct: 2,
+                explanation: "The Definition of Done ensures quality and that work is truly complete. Rather than lowering standards, address the root cause: Why is security testing slow? Can it be automated? Are tests too broad? Fix the process, not the standard.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 31,
+                domain: "Measurement",
+                difficulty: "hard",
+                question: "What does SPI = 1.2 indicate?",
+                options: [
+                    "The project is 20% over budget",
+                    "The project is ahead of schedule; getting 120% of planned work done",
+                    "The project will finish in 1.2 years",
+                    "The project has 20% more scope"
+                ],
+                correct: 1,
+                explanation: "SPI (Schedule Performance Index) = EV/PV. SPI > 1 means you're ahead of schedule. SPI = 1.2 means you're achieving 120% of planned work - you're 20% ahead of schedule.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 32,
+                domain: "Uncertainty",
+                difficulty: "medium",
+                question: "What is the purpose of a risk register?",
+                options: [
+                    "To eliminate all project risks",
+                    "To document identified risks, analysis, and response plans",
+                    "To assign blame when risks occur",
+                    "To satisfy auditors only"
+                ],
+                correct: 1,
+                explanation: "The risk register is a living document that captures identified risks, their analysis (probability, impact, priority), planned responses, owners, and status. It's a key tool for proactive risk management.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 33,
+                domain: "Stakeholder",
+                difficulty: "easy",
+                question: "How many communication channels exist in a team of 7 people?",
+                options: [
+                    "7",
+                    "14",
+                    "21",
+                    "42"
+                ],
+                correct: 2,
+                explanation: "Communication channels = n(n-1)/2 where n is the number of people. For 7 people: 7(6)/2 = 21 channels. This shows how complexity grows as team size increases.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 34,
+                domain: "Team",
+                difficulty: "easy",
+                question: "According to Maslow's hierarchy, what must be satisfied before self-actualization?",
+                options: [
+                    "Only physiological needs",
+                    "Physiological, safety, social, and esteem needs",
+                    "Just safety needs",
+                    "Nothing; self-actualization comes first"
+                ],
+                correct: 1,
+                explanation: "Maslow's hierarchy (from bottom to top): Physiological, Safety, Social/Belonging, Esteem, Self-actualization. Lower-level needs must be reasonably satisfied before higher-level needs become motivators.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 35,
+                domain: "Development",
+                difficulty: "medium",
+                question: "In Scrum, who owns the Sprint Backlog?",
+                options: [
+                    "Product Owner",
+                    "Scrum Master",
+                    "Development Team",
+                    "The sponsor"
+                ],
+                correct: 2,
+                explanation: "The Development Team owns the Sprint Backlog. They decide how to accomplish the work, can modify it during the sprint, and are accountable for delivering the sprint goal.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 36,
+                domain: "Planning",
+                difficulty: "hard",
+                question: "Activity A takes 5 days with 10 days total float. Activity B takes 3 days with 0 float. Which should you crash if you need to save 2 days?",
+                options: [
+                    "Activity A because it's longer",
+                    "Activity B because it's on the critical path",
+                    "Either one",
+                    "Neither; add more people instead"
+                ],
+                correct: 1,
+                explanation: "Only crash activities on the critical path (zero float). Activity B with 0 float is critical; crashing it saves project time. Crashing Activity A (with float) doesn't shorten the project duration.",
+                xp: 100,
+                domain_xp: 20
+            },
+            {
+                id: 37,
+                domain: "Work",
+                difficulty: "easy",
+                question: "What process group contains the 'Direct and Manage Project Work' process?",
+                options: [
+                    "Initiating",
+                    "Planning",
+                    "Executing",
+                    "Monitoring and Controlling"
+                ],
+                correct: 2,
+                explanation: "'Direct and Manage Project Work' is in the Executing process group. It's where the project management plan is executed, work is performed, and deliverables are produced.",
+                xp: 50,
+                domain_xp: 10
+            },
+            {
+                id: 38,
+                domain: "Delivery",
+                difficulty: "medium",
+                question: "What is the purpose of acceptance criteria?",
+                options: [
+                    "To evaluate team performance",
+                    "To define specific conditions that must be met for a deliverable to be accepted",
+                    "To document all possible test cases",
+                    "To satisfy auditors"
+                ],
+                correct: 1,
+                explanation: "Acceptance criteria define the specific, testable conditions that must be met for work to be considered complete and acceptable. They provide clarity on 'done' for that specific item.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 39,
+                domain: "Measurement",
+                difficulty: "medium",
+                question: "What is cycle time in Lean/Kanban?",
+                options: [
+                    "Time from request to delivery",
+                    "Time from when work starts to when it's completed",
+                    "Time between team meetings",
+                    "Time to complete one sprint"
+                ],
+                correct: 1,
+                explanation: "Cycle time is the time from when work actually starts (when someone begins working on it) until it's completed. This differs from lead time (request to delivery) and is a key flow metric.",
+                xp: 75,
+                domain_xp: 15
+            },
+            {
+                id: 40,
+                domain: "Uncertainty",
+                difficulty: "hard",
+                question: "You use Monte Carlo simulation and get 70% confidence of finishing by Sept 1 and 90% confidence by Sept 15. The contract says Sept 1. What do you do?",
+                options: [
+                    "Commit to Sept 1 since it's in the contract",
+                    "Communicate the probabilistic forecast and work with stakeholders on realistic expectations or mitigation",
+                    "Ignore the simulation; plans are just plans",
+                    "Change the contract unilaterally"
+                ],
+                correct: 1,
+                explanation: "Monte Carlo provides probabilistic forecasts. With only 70% confidence of meeting the contract date, communicate the risk transparently and work with stakeholders on mitigation (reduce scope, add resources, adjust date) rather than hoping for the best.",
+                xp: 100,
+                domain_xp: 20
+            }
+        ];
+
+        // Additional boss battle questions
+        const BOSS_QUESTIONS = [
+            {
+                id: 101,
+                domain: "Hybrid",
+                difficulty: "boss",
+                question: "BOSS BATTLE: You're managing a program with 5 projects. 3 use Agile, 2 use predictive. Integration is failing. Stakeholders are confused. The sponsor wants 'one approach.' What's your strategy?",
+                options: [
+                    "Force everyone to Agile",
+                    "Force everyone to Waterfall",
+                    "Create integration points, shared governance, and clear communication protocols while allowing each project to use appropriate methods",
+                    "Split into separate programs"
+                ],
+                correct: 2,
+                explanation: "The problem isn't multiple approaches—it's integration and communication. Create: 1) Regular integration points/milestones, 2) Shared governance (CCB, risk management), 3) Common reporting framework, 4) Clear interfaces between projects. Each project can use methods suited to its work while the program provides cohesion.",
+                xp: 200,
+                domain_xp: 40,
+                isBoss: true
+            },
+            {
+                id: 102,
+                domain: "Leadership",
+                difficulty: "boss",
+                question: "BOSS BATTLE: Your team is burned out from 6 months of constant pressure. Morale is low. Key people are threatening to leave. Management wants to accelerate. What do you do?",
+                options: [
+                    "Pressure the team harder; commitments must be kept",
+                    "Let people leave; they're not committed",
+                    "Transparently communicate the sustainability crisis to leadership with data, advocate for sustainable pace, and be willing to escalate or resign if necessary",
+                    "Work secretly to slow things down"
+                ],
+                correct: 2,
+                explanation: "This is a servant leadership moment requiring courage. Gather data (velocity trends, quality metrics, turnover risk), communicate the unsustainability clearly to leadership, propose realistic alternatives (reduce scope, extend timeline, add resources sustainably). If leadership won't listen, escalate or consider leaving—you're accountable for your team's wellbeing.",
+                xp: 200,
+                domain_xp: 40,
+                isBoss: true
+            },
+            {
+                id: 103,
+                domain: "Business",
+                difficulty: "boss",
+                question: "BOSS BATTLE: You discover your project's business case was based on fraudulent ROI projections. You have evidence. The sponsor (who created the projections) says to continue. What do you do?",
+                options: [
+                    "Continue; it's not your concern",
+                    "Quit immediately",
+                    "Document findings, escalate through proper channels (PMO, ethics, legal), and prepare to be a whistleblower if necessary",
+                    "Confront the sponsor publicly"
+                ],
+                correct: 2,
+                explanation: "This is an ethical crisis. You have professional and possibly legal obligations: 1) Document evidence carefully, 2) Escalate to PMO/senior leadership/ethics committee, 3) If internal escalation fails, consider external whistleblowing, 4) Be prepared for retaliation but know you're on the right side. Integrity isn't optional.",
+                xp: 200,
+                domain_xp: 40,
+                isBoss: true
+            },
+            {
+                id: 104,
+                domain: "Crisis",
+                difficulty: "boss",
+                question: "BOSS BATTLE: A major security breach occurred. Customer data is at risk. The breach happened 3 days ago but was just discovered. Legal says 'minimize disclosure.' What's your immediate action plan?",
+                options: [
+                    "Follow legal advice exactly",
+                    "Immediately disclose publicly regardless of legal advice",
+                    "Assess scope, activate incident response, inform key stakeholders, and work with legal/security on responsible disclosure timing",
+                    "Cover it up"
+                ],
+                correct: 2,
+                explanation: "Security breaches require immediate, structured response: 1) Activate incident response team, 2) Assess scope and stop the breach, 3) Preserve evidence, 4) Inform senior leadership immediately, 5) Work with legal on disclosure timing (balancing legal protection with ethical obligations and regulations), 6) Prepare customer notification and remediation. Transparency with stakeholders is critical, even if public disclosure timing is strategic.",
+                xp: 200,
+                domain_xp: 40,
+                isBoss: true
+            },
+            {
+                id: 105,
+                domain: "Complexity",
+                difficulty: "boss",
+                question: "BOSS BATTLE: Your project spans 8 countries, 15 time zones, 4 cultures, 3 languages, with both Agile and waterfall components. How do you even start?",
+                options: [
+                    "Refuse; it's too complex",
+                    "Centralize everything under one approach",
+                    "Build enabling structure: cultural liaisons, follow-the-sun scheduling, clear interfaces, visual management, over-communicate, respect local autonomy within global standards",
+                    "Let each location work independently"
+                ],
+                correct: 2,
+                explanation: "Extreme complexity requires enabling structure without stifling autonomy: 1) Cultural liaisons/champions in each location, 2) Follow-the-sun collaboration windows, 3) Visual management systems (boards, dashboards accessible to all), 4) Over-communication with async-first mindset, 5) Clear decision-making frameworks, 6) Respect local work methods within global standards (shared DoD, integration points), 7) Regular face-to-face integration events. Complexity is managed through structure, communication, and trust.",
+                xp: 200,
+                domain_xp: 40,
+                isBoss: true
+            }
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: "first_win", name: "First Victory", desc: "Answer your first question correctly", icon: "🎯", tier: "bronze" },
+            { id: "win_streak_5", name: "On Fire", desc: "5 correct answers in a row", icon: "🔥", tier: "silver" },
+            { id: "win_streak_10", name: "Unstoppable", desc: "10 correct answers in a row", icon: "⚡", tier: "gold" },
+            { id: "domain_master_stakeholder", name: "Stakeholder Master", desc: "100% in Stakeholder domain", icon: "👥", tier: "gold" },
+            { id: "domain_master_team", name: "Team Master", desc: "100% in Team domain", icon: "🤝", tier: "gold" },
+            { id: "domain_master_development", name: "Agile Master", desc: "100% in Development domain", icon: "🔄", tier: "gold" },
+            { id: "level_5", name: "Rising Star", desc: "Reach level 5", icon: "⭐", tier: "bronze" },
+            { id: "level_10", name: "Experienced PM", desc: "Reach level 10", icon: "💫", tier: "silver" },
+            { id: "level_20", name: "Senior PM", desc: "Reach level 20", icon: "🌟", tier: "gold" },
+            { id: "level_50", name: "PM Legend", desc: "Reach level 50", icon: "👑", tier: "legendary" },
+            { id: "speed_demon", name: "Speed Demon", desc: "Answer 10 questions in under 5 seconds each", icon: "⚡", tier: "silver" },
+            { id: "perfectionist", name: "Perfectionist", desc: "Complete 20 questions with 100% accuracy", icon: "💎", tier: "gold" },
+            { id: "comeback_kid", name: "Comeback Kid", desc: "Win 5 in a row after losing 3", icon: "🔄", tier: "silver" },
+            { id: "boss_slayer", name: "Boss Slayer", desc: "Defeat your first boss", icon: "⚔️", tier: "legendary" },
+            { id: "boss_master", name: "Boss Master", desc: "Defeat all bosses", icon: "🏆", tier: "legendary" },
+            { id: "grinder", name: "The Grinder", desc: "Answer 100 questions", icon: "💪", tier: "silver" },
+            { id: "dedicated", name: "Dedicated", desc: "Answer 500 questions", icon: "🎖️", tier: "gold" },
+            { id: "elite", name: "Elite", desc: "Answer 1000 questions", icon: "👑", tier: "legendary" },
+            { id: "daily_warrior", name: "Daily Warrior", desc: "Complete 7 daily challenges", icon: "📅", tier: "gold" },
+            { id: "power_user", name: "Power User", desc: "Use 50 power-ups", icon: "⚡", tier: "silver" },
+            { id: "rich", name: "Wealthy PM", desc: "Accumulate 10,000 coins", icon: "💰", tier: "gold" },
+            { id: "shopaholic", name: "Shopaholic", desc: "Buy all items from the shop", icon: "🛒", tier: "legendary" },
+            { id: "flawless", name: "Flawless Victory", desc: "Win 10 arena battles without losing", icon: "🛡️", tier: "legendary" }
+        ];
+
+        const CHARACTERS = [
+            {
+                id: "warrior",
+                name: "Project Warrior",
+                desc: "Aggressive with planning, strong in execution",
+                icon: "⚔️",
+                baseHP: 120,
+                baseAttack: 15,
+                special: "Critical Path Strike - 2x damage on Planning questions"
+            },
+            {
+                id: "mage",
+                name: "Agile Mage",
+                desc: "Master of adaptation and continuous delivery",
+                icon: "🔮",
+                baseHP: 100,
+                baseAttack: 12,
+                special: "Sprint Burst - Bonus XP in Development domain"
+            },
+            {
+                id: "guardian",
+                name: "Risk Guardian",
+                desc: "Defensive expert, masters uncertainty",
+                icon: "🛡️",
+                baseHP: 150,
+                baseAttack: 10,
+                special: "Risk Shield - Take less damage on wrong answers"
+            },
+            {
+                id: "diplomat",
+                name: "Stakeholder Diplomat",
+                desc: "Communication expert, team motivator",
+                icon: "🎭",
+                baseHP: 110,
+                baseAttack: 13,
+                special: "Team Synergy - Bonus on Stakeholder & Team questions"
+            }
+        ];
+
+        const POWER_UPS = [
+            { id: "hint", name: "Hint", desc: "Eliminate 2 wrong answers", cost: 100, icon: "💡" },
+            { id: "double_xp", name: "Double XP", desc: "2x XP for next 5 questions", cost: 200, icon: "⚡" },
+            { id: "shield", name: "Shield", desc: "No damage from next wrong answer", cost: 150, icon: "🛡️" },
+            { id: "heal", name: "Health Potion", desc: "Restore 50 HP", cost: 150, icon: "❤️" },
+            { id: "time_freeze", name: "Time Freeze", desc: "Unlimited time for next 3 questions", cost: 250, icon: "⏰" }
+        ];
+
+        // ==================== GAME STATE ====================
+        
+        let gameState = {
+            // Player data
+            player: {
+                name: "Project Manager",
+                character: null,
+                level: 1,
+                xp: 0,
+                xpToNextLevel: 100,
+                hp: 100,
+                maxHP: 100,
+                attack: 10,
+                coins: 0,
+                energy: 100,
+                maxEnergy: 100
+            },
+            
+            // Stats
+            stats: {
+                totalQuestions: 0,
+                correctAnswers: 0,
+                wrongAnswers: 0,
+                currentStreak: 0,
+                bestStreak: 0,
+                questionsPerDomain: {},
+                correctPerDomain: {},
+                fastestAnswer: 999,
+                totalTimePlayed: 0
+            },
+            
+            // Progress
+            achievements: [],
+            unlockedAchievements: new Set(),
+            domainMastery: {
+                Stakeholder: 0,
+                Team: 0,
+                Development: 0,
+                Planning: 0,
+                Work: 0,
+                Delivery: 0,
+                Measurement: 0,
+                Uncertainty: 0
+            },
+            
+            // Inventory
+            powerUps: {
+                hint: 0,
+                double_xp: 0,
+                shield: 0,
+                heal: 0,
+                time_freeze: 0
+            },
+            activePowerUps: [],
+            
+            // Battle state
+            currentBattle: null,
+            currentQuestion: null,
+            questionStartTime: null,
+            
+            // Boss battles
+            bossesDefeated: [],
+            
+            // Daily challenge
+            dailyChallenge: null,
+            dailyChallengeCompleted: false,
+            dailyStreak: 0,
+            lastPlayDate: null,
+            
+            // UI state
+            mode: "welcome", // welcome, character_select, main_menu, quest, arena, boss, shop, stats
+            selectedAnswer: null,
+            showExplanation: false
+        };
+
+        // ==================== GAME LOGIC ====================
+        
+        function initGame() {
+            // Try to load saved game
+            const saved = localStorage.getItem('pmpQuestSave');
+            if (saved) {
+                try {
+                    const savedState = JSON.parse(saved);
+                    gameState = { ...gameState, ...savedState };
+                    // Check daily challenge
+                    checkDailyChallenge();
+                } catch (e) {
+                    console.error('Failed to load save:', e);
+                }
+            }
+        }
+
+        function saveGame() {
+            try {
+                localStorage.setItem('pmpQuestSave', JSON.stringify(gameState));
+            } catch (e) {
+                console.error('Failed to save game:', e);
+            }
+        }
+
+        function selectCharacter(characterId) {
+            const character = CHARACTERS.find(c => c.id === characterId);
+            gameState.player.character = character;
+            gameState.player.maxHP = character.baseHP;
+            gameState.player.hp = character.baseHP;
+            gameState.player.attack = character.baseAttack;
+            gameState.mode = "main_menu";
+            saveGame();
+            render();
+        }
+
+        function gainXP(amount) {
+            // Check for double XP power-up
+            if (gameState.activePowerUps.includes('double_xp')) {
+                amount *= 2;
+            }
+            
+            gameState.player.xp += amount;
+            
+            // Level up check
+            while (gameState.player.xp >= gameState.player.xpToNextLevel) {
+                levelUp();
+            }
+            
+            saveGame();
+        }
+
+        function levelUp() {
+            gameState.player.level++;
+            gameState.player.xp -= gameState.player.xpToNextLevel;
+            gameState.player.xpToNextLevel = Math.floor(gameState.player.xpToNextLevel * 1.5);
+            
+            // Increase stats
+            gameState.player.maxHP += 10;
+            gameState.player.hp = gameState.player.maxHP; // Heal on level up
+            gameState.player.attack += 2;
+            gameState.player.coins += 100;
+            
+            // Show level up animation
+            showNotification(`🎉 LEVEL UP! You are now level ${gameState.player.level}!`, 'success');
+            createParticles(50);
+            
+            // Check achievements
+            if (gameState.player.level === 5) unlockAchievement('level_5');
+            if (gameState.player.level === 10) unlockAchievement('level_10');
+            if (gameState.player.level === 20) unlockAchievement('level_20');
+            if (gameState.player.level === 50) unlockAchievement('level_50');
+            
+            saveGame();
+        }
+
+        function startQuest() {
+            const question = getRandomQuestion();
+            gameState.currentQuestion = question;
+            gameState.questionStartTime = Date.now();
+            gameState.selectedAnswer = null;
+            gameState.showExplanation = false;
+            gameState.mode = "quest";
+            render();
+        }
+
+        function startArenaBattle() {
+            const question = getRandomQuestion();
+            gameState.currentBattle = {
+                enemyHP: 100,
+                enemyMaxHP: 100,
+                enemyAttack: 15,
+                enemyName: "Knowledge Challenger",
+                battleType: "arena"
+            };
+            gameState.currentQuestion = question;
+            gameState.questionStartTime = Date.now();
+            gameState.selectedAnswer = null;
+            gameState.showExplanation = false;
+            gameState.mode = "arena";
+            render();
+        }
+
+        function startBossBattle() {
+            const bossQuestion = BOSS_QUESTIONS[Math.floor(Math.random() * BOSS_QUESTIONS.length)];
+            gameState.currentBattle = {
+                enemyHP: 500,
+                enemyMaxHP: 500,
+                enemyAttack: 30,
+                enemyName: "Project Chaos Dragon",
+                battleType: "boss",
+                isBoss: true
+            };
+            gameState.currentQuestion = bossQuestion;
+            gameState.questionStartTime = Date.now();
+            gameState.selectedAnswer = null;
+            gameState.showExplanation = false;
+            gameState.mode = "boss";
+            render();
+        }
+
+        function getRandomQuestion() {
+            const availableQuestions = QUESTION_BANK.filter(q => !q.isBoss);
+            return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+        }
+
+        function submitAnswer(answerIndex) {
+            if (gameState.selectedAnswer !== null) return; // Already answered
+            
+            gameState.selectedAnswer = answerIndex;
+            const question = gameState.currentQuestion;
+            const isCorrect = answerIndex === question.correct;
+            const timeTaken = (Date.now() - gameState.questionStartTime) / 1000;
+            
+            // Update stats
+            gameState.stats.totalQuestions++;
+            if (!gameState.stats.questionsPerDomain[question.domain]) {
+                gameState.stats.questionsPerDomain[question.domain] = 0;
+                gameState.stats.correctPerDomain[question.domain] = 0;
+            }
+            gameState.stats.questionsPerDomain[question.domain]++;
+            
+            if (isCorrect) {
+                handleCorrectAnswer(question, timeTaken);
+            } else {
+                handleWrongAnswer(question);
+            }
+            
+            gameState.showExplanation = true;
+            saveGame();
+            render();
+        }
+
+        function handleCorrectAnswer(question, timeTaken) {
+            gameState.stats.correctAnswers++;
+            gameState.stats.correctPerDomain[question.domain]++;
+            gameState.stats.currentStreak++;
+            if (gameState.stats.currentStreak > gameState.stats.bestStreak) {
+                gameState.stats.bestStreak = gameState.stats.currentStreak;
+            }
+            if (timeTaken < gameState.stats.fastestAnswer) {
+                gameState.stats.fastestAnswer = timeTaken;
+            }
+            
+            // Award XP and coins
+            let xpGained = question.xp;
+            let coinsGained = Math.floor(question.xp / 2);
+            
+            // Character special bonus
+            const character = gameState.player.character;
+            if (character.id === "warrior" && question.domain === "Planning") {
+                xpGained *= 2;
+                showDamageNumber("2x CRIT!", "success");
+            } else if (character.id === "mage" && question.domain === "Development") {
+                xpGained = Math.floor(xpGained * 1.5);
+            } else if (character.id === "diplomat" && (question.domain === "Stakeholder" || question.domain === "Team")) {
+                xpGained = Math.floor(xpGained * 1.5);
+            }
+            
+            gainXP(xpGained);
+            gameState.player.coins += coinsGained;
+            
+            // Update domain mastery
+            gameState.domainMastery[question.domain] = Math.min(100, 
+                gameState.domainMastery[question.domain] + question.domain_xp);
+            
+            // Check domain mastery achievements
+            if (gameState.domainMastery[question.domain] === 100) {
+                unlockAchievement(`domain_master_${question.domain.toLowerCase()}`);
+            }
+            
+            // Battle damage
+            if (gameState.currentBattle) {
+                const damage = gameState.player.attack + Math.floor(Math.random() * 10);
+                gameState.currentBattle.enemyHP -= damage;
+                showDamageNumber(`-${damage}`, "success");
+                createParticles(10);
+                
+                if (gameState.currentBattle.enemyHP <= 0) {
+                    handleBattleWin();
+                }
+            }
+            
+            // Check achievements
+            if (gameState.stats.correctAnswers === 1) unlockAchievement('first_win');
+            if (gameState.stats.currentStreak === 5) unlockAchievement('win_streak_5');
+            if (gameState.stats.currentStreak === 10) unlockAchievement('win_streak_10');
+            if (gameState.stats.totalQuestions >= 100) unlockAchievement('grinder');
+            if (gameState.stats.totalQuestions >= 500) unlockAchievement('dedicated');
+            if (gameState.stats.totalQuestions >= 1000) unlockAchievement('elite');
+            
+            showNotification(`✓ Correct! +${xpGained} XP, +${coinsGained} coins`, 'success');
+        }
+
+        function handleWrongAnswer(question) {
+            gameState.stats.wrongAnswers++;
+            gameState.stats.currentStreak = 0;
+            
+            // Take damage
+            let damage = 20;
+            
+            // Check shield power-up
+            if (gameState.activePowerUps.includes('shield')) {
+                damage = 0;
+                gameState.activePowerUps = gameState.activePowerUps.filter(p => p !== 'shield');
+                showNotification('🛡️ Shield absorbed the damage!', 'info');
+            } else if (gameState.player.character.id === "guardian") {
+                damage = Math.floor(damage * 0.7); // Guardian takes 30% less damage
+            }
+            
+            gameState.player.hp = Math.max(0, gameState.player.hp - damage);
+            
+            if (damage > 0) {
+                showDamageNumber(`-${damage} HP`, "error");
+            }
+            
+            // Enemy attack in battle
+            if (gameState.currentBattle) {
+                const enemyDamage = gameState.currentBattle.enemyAttack + Math.floor(Math.random() * 5);
+                gameState.player.hp = Math.max(0, gameState.player.hp - enemyDamage);
+                setTimeout(() => showDamageNumber(`-${enemyDamage} HP`, "error"), 500);
+            }
+            
+            // Check for game over
+            if (gameState.player.hp <= 0) {
+                handleGameOver();
+            }
+            
+            showNotification(`✗ Wrong answer! -${damage} HP`, 'error');
+        }
+
+        function handleBattleWin() {
+            const isBoss = gameState.currentBattle.isBoss;
+            const bonusXP = isBoss ? 500 : 200;
+            const bonusCoins = isBoss ? 500 : 100;
+            
+            gainXP(bonusXP);
+            gameState.player.coins += bonusCoins;
+            
+            if (isBoss) {
+                gameState.bossesDefeated.push(gameState.currentQuestion.id);
+                unlockAchievement('boss_slayer');
+                if (gameState.bossesDefeated.length === BOSS_QUESTIONS.length) {
+                    unlockAchievement('boss_master');
+                }
+                showNotification(`🏆 BOSS DEFEATED! +${bonusXP} XP, +${bonusCoins} coins`, 'legendary');
+            } else {
+                showNotification(`⚔️ Victory! +${bonusXP} XP, +${bonusCoins} coins`, 'success');
+            }
+            
+            createParticles(30);
+        }
+
+        function handleGameOver() {
+            showNotification('💀 Game Over! Respawning...', 'error');
+            setTimeout(() => {
+                gameState.player.hp = gameState.player.maxHP;
+                gameState.currentBattle = null;
+                gameState.mode = "main_menu";
+                saveGame();
+                render();
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            if (gameState.mode === "quest") {
+                startQuest();
+            } else if (gameState.mode === "arena") {
+                if (gameState.currentBattle && gameState.currentBattle.enemyHP > 0) {
+                    const question = getRandomQuestion();
+                    gameState.currentQuestion = question;
+                    gameState.questionStartTime = Date.now();
+                    gameState.selectedAnswer = null;
+                    gameState.showExplanation = false;
+                    render();
+                } else {
+                    startArenaBattle();
+                }
+            } else if (gameState.mode === "boss") {
+                if (gameState.currentBattle && gameState.currentBattle.enemyHP > 0) {
+                    gameState.mode = "main_menu";
+                    gameState.currentBattle = null;
+                } else {
+                    gameState.mode = "main_menu";
+                }
+                render();
+            }
+        }
+
+        function usePowerUp(powerUpId) {
+            if (gameState.powerUps[powerUpId] <= 0) {
+                showNotification('You don\'t have this power-up!', 'error');
+                return;
+            }
+            
+            gameState.powerUps[powerUpId]--;
+            
+            switch(powerUpId) {
+                case 'hint':
+                    // Eliminate 2 wrong answers
+                    const correctAnswer = gameState.currentQuestion.correct;
+                    const wrongAnswers = [0, 1, 2, 3].filter(i => i !== correctAnswer);
+                    const toEliminate = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 2);
+                    gameState.eliminatedAnswers = toEliminate;
+                    showNotification('💡 2 wrong answers eliminated!', 'info');
+                    break;
+                    
+                case 'double_xp':
+                    gameState.activePowerUps.push('double_xp');
+                    setTimeout(() => {
+                        gameState.activePowerUps = gameState.activePowerUps.filter(p => p !== 'double_xp');
+                    }, 5 * 60000); // 5 questions worth
+                    showNotification('⚡ Double XP activated for 5 questions!', 'info');
+                    break;
+                    
+                case 'shield':
+                    gameState.activePowerUps.push('shield');
+                    showNotification('🛡️ Shield activated! Next wrong answer won\'t hurt.', 'info');
+                    break;
+                    
+                case 'heal':
+                    gameState.player.hp = Math.min(gameState.player.maxHP, gameState.player.hp + 50);
+                    showNotification('❤️ Restored 50 HP!', 'success');
+                    break;
+                    
+                case 'time_freeze':
+                    showNotification('⏰ Time frozen for next 3 questions!', 'info');
+                    break;
+            }
+            
+            saveGame();
+            render();
+        }
+
+        function buyPowerUp(powerUpId) {
+            const powerUp = POWER_UPS.find(p => p.id === powerUpId);
+            if (gameState.player.coins < powerUp.cost) {
+                showNotification('Not enough coins!', 'error');
+                return;
+            }
+            
+            gameState.player.coins -= powerUp.cost;
+            gameState.powerUps[powerUpId]++;
+            
+            showNotification(`Purchased ${powerUp.name}!`, 'success');
+            saveGame();
+            render();
+        }
+
+        function unlockAchievement(achievementId) {
+            if (gameState.unlockedAchievements.has(achievementId)) return;
+            
+            const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+            if (!achievement) return;
+            
+            gameState.unlockedAchievements.add(achievementId);
+            gameState.achievements.push({
+                ...achievement,
+                unlockedAt: Date.now()
+            });
+            
+            // Show achievement popup
+            showAchievementPopup(achievement);
+            
+            // Award coins based on tier
+            const coinRewards = { bronze: 100, silver: 250, gold: 500, legendary: 1000 };
+            const coins = coinRewards[achievement.tier];
+            gameState.player.coins += coins;
+            
+            saveGame();
+        }
+
+        function checkDailyChallenge() {
+            const today = new Date().toDateString();
+            if (gameState.lastPlayDate !== today) {
+                // New day!
+                gameState.dailyChallengeCompleted = false;
+                gameState.lastPlayDate = today;
+                
+                // Generate daily challenge
+                gameState.dailyChallenge = {
+                    type: "answer_correct",
+                    target: 10,
+                    progress: 0,
+                    reward: 500
+                };
+                
+                saveGame();
+            }
+        }
+
+        // ==================== UI FUNCTIONS ====================
+        
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                legendary: 'bg-gradient-to-r from-yellow-400 via-purple-500 to-pink-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 slide-in`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function showAchievementPopup(achievement) {
+            const popup = document.createElement('div');
+            popup.className = 'achievement-popup bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-lg shadow-2xl max-w-sm';
+            popup.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-4xl sparkle">${achievement.icon}</div>
+                    <div>
+                        <div class="font-bold text-lg">Achievement Unlocked!</div>
+                        <div class="text-sm">${achievement.name}</div>
+                        <div class="text-xs opacity-90">${achievement.desc}</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.remove();
+            }, 5000);
+        }
+
+        function showDamageNumber(text, type) {
+            const colors = {
+                success: 'text-green-400',
+                error: 'text-red-500'
+            };
+            
+            const damage = document.createElement('div');
+            damage.className = `damage-number ${colors[type]}`;
+            damage.textContent = text;
+            damage.style.left = '50%';
+            damage.style.top = '50%';
+            document.getElementById('app').appendChild(damage);
+            
+            setTimeout(() => {
+                damage.remove();
+            }, 1000);
+        }
+
+        function createParticles(count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * window.innerWidth + 'px';
+                    particle.style.top = Math.random() * window.innerHeight + 'px';
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 1000);
+                }, i * 20);
+            }
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        
+        function render() {
+            const app = document.getElementById('app');
+            let content = '';
+            
+            switch(gameState.mode) {
+                case 'welcome':
+                    content = renderWelcome();
+                    break;
+                case 'character_select':
+                    content = renderCharacterSelect();
+                    break;
+                case 'main_menu':
+                    content = renderMainMenu();
+                    break;
+                case 'quest':
+                case 'arena':
+                case 'boss':
+                    content = renderBattle();
+                    break;
+                case 'shop':
+                    content = renderShop();
+                    break;
+                case 'stats':
+                    content = renderStats();
+                    break;
+            }
+            
+            app.innerHTML = content;
+        }
+
+        function renderWelcome() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="max-w-4xl w-full fade-in">
+                        <div class="text-center mb-12">
+                            <h1 class="text-7xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent float">
+                                ⚔️ PMP QUEST ⚔️
+                            </h1>
+                            <p class="text-3xl mb-2 text-purple-200">The Project Manager's Journey</p>
+                            <p class="text-xl text-purple-300">Master PMBOK 7 • Level Up • Defeat Bosses • Earn Achievements</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-2 border-purple-500 glow mb-8">
+                            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                                <div class="text-center p-6 bg-black/30 rounded-xl">
+                                    <div class="text-5xl mb-3">🎮</div>
+                                    <div class="font-bold text-xl mb-2">RPG System</div>
+                                    <div class="text-sm text-purple-200">Level up, gain powers, unlock abilities</div>
+                                </div>
+                                <div class="text-center p-6 bg-black/30 rounded-xl">
+                                    <div class="text-5xl mb-3">⚔️</div>
+                                    <div class="font-bold text-xl mb-2">Battle System</div>
+                                    <div class="text-sm text-purple-200">Fight knowledge bosses, test your skills</div>
+                                </div>
+                                <div class="text-center p-6 bg-black/30 rounded-xl">
+                                    <div class="text-5xl mb-3">🏆</div>
+                                    <div class="font-bold text-xl mb-2">50+ Achievements</div>
+                                    <div class="text-sm text-purple-200">Unlock badges, earn rewards, show mastery</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button onclick="gameState.mode = 'character_select'; render();" 
+                                        class="px-12 py-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white rounded-xl font-bold text-2xl hover:scale-110 transition-transform shadow-2xl pulse">
+                                    ⚔️ START YOUR JOURNEY ⚔️
+                                </button>
+                                ${gameState.player.character ? `
+                                    <button onclick="gameState.mode = 'main_menu'; render();" 
+                                            class="block mx-auto mt-4 px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all">
+                                        Continue Game
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCharacterSelect() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="max-w-6xl w-full fade-in">
+                        <h1 class="text-5xl font-bold text-center mb-4">Choose Your Character</h1>
+                        <p class="text-center text-purple-200 mb-12 text-xl">Each character has unique abilities and playstyles</p>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            ${CHARACTERS.map(char => `
+                                <div class="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-sm p-6 rounded-xl border-2 border-purple-500 hover:border-yellow-400 transition-all cursor-pointer hover:scale-105"
+                                     onclick="selectCharacter('${char.id}')">
+                                    <div class="text-7xl text-center mb-4">${char.icon}</div>
+                                    <h3 class="text-2xl font-bold text-center mb-2">${char.name}</h3>
+                                    <p class="text-sm text-purple-200 text-center mb-4">${char.desc}</p>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span>❤️ HP:</span>
+                                            <span class="font-bold">${char.baseHP}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>⚔️ Attack:</span>
+                                            <span class="font-bold">${char.baseAttack}</span>
+                                        </div>
+                                        <div class="mt-4 p-3 bg-black/30 rounded text-xs">
+                                            <div class="text-yellow-400 font-bold mb-1">Special:</div>
+                                            ${char.special}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMainMenu() {
+            const character = gameState.player.character;
+            const xpPercentage = (gameState.player.xp / gameState.player.xpToNextLevel) * 100;
+            const hpPercentage = (gameState.player.hp / gameState.player.maxHP) * 100;
+            
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-7xl mx-auto">
+                        <!-- Player Status Bar -->
+                        <div class="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-sm p-6 rounded-2xl shadow-2xl mb-6 border-2 border-purple-500">
+                            <div class="flex items-center justify-between flex-wrap gap-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-6xl">${character.icon}</div>
+                                    <div>
+                                        <div class="text-3xl font-bold">${gameState.player.name}</div>
+                                        <div class="text-xl text-purple-200">${character.name} - Level ${gameState.player.level}</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-6">
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold text-yellow-400">${gameState.player.coins}</div>
+                                        <div class="text-sm text-purple-200">💰 Coins</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold text-purple-400">${gameState.stats.currentStreak}</div>
+                                        <div class="text-sm text-purple-200">🔥 Streak</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>❤️ HP</span>
+                                        <span>${gameState.player.hp}/${gameState.player.maxHP}</span>
+                                    </div>
+                                    <div class="h-4 bg-black/30 rounded-full overflow-hidden">
+                                        <div class="hp-bar h-full" style="width: ${hpPercentage}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>⭐ XP</span>
+                                        <span>${gameState.player.xp}/${gameState.player.xpToNextLevel}</span>
+                                    </div>
+                                    <div class="h-4 bg-black/30 rounded-full overflow-hidden">
+                                        <div class="xp-bar h-full" style="width: ${xpPercentage}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Game Modes -->
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                            <!-- Quest Mode -->
+                            <div class="bg-gradient-to-br from-blue-900/50 to-blue-700/50 p-8 rounded-2xl border-2 border-blue-500 hover:border-blue-300 transition-all cursor-pointer hover:scale-105"
+                                 onclick="startQuest()">
+                                <div class="text-6xl mb-4 text-center">🎯</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Quest Mode</h3>
+                                <p class="text-center text-blue-100 mb-4">Practice questions, build knowledge, gain XP</p>
+                                <div class="text-center">
+                                    <div class="inline-block px-4 py-2 bg-blue-600 rounded-lg">
+                                        No HP loss
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Arena Battle -->
+                            <div class="bg-gradient-to-br from-red-900/50 to-red-700/50 p-8 rounded-2xl border-2 border-red-500 hover:border-red-300 transition-all cursor-pointer hover:scale-105"
+                                 onclick="startArenaBattle()">
+                                <div class="text-6xl mb-4 text-center">⚔️</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Arena Battle</h3>
+                                <p class="text-center text-red-100 mb-4">Fight enemies, test your skills, earn big rewards</p>
+                                <div class="text-center">
+                                    <div class="inline-block px-4 py-2 bg-red-600 rounded-lg">
+                                        High risk, high reward
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Boss Raid -->
+                            <div class="bg-gradient-to-br from-purple-900/50 to-purple-700/50 p-8 rounded-2xl border-2 border-purple-500 hover:border-purple-300 transition-all cursor-pointer hover:scale-105 ${gameState.player.level < 5 ? 'opacity-50' : ''}"
+                                 onclick="${gameState.player.level >= 5 ? 'startBossBattle()' : 'showNotification(\'Level 5 required!\', \'error\')'}">
+                                <div class="text-6xl mb-4 text-center">🐲</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Boss Raid</h3>
+                                <p class="text-center text-purple-100 mb-4">Epic battles, massive XP, legendary rewards</p>
+                                <div class="text-center">
+                                    <div class="inline-block px-4 py-2 ${gameState.player.level >= 5 ? 'bg-purple-600' : 'bg-gray-600'} rounded-lg">
+                                        ${gameState.player.level >= 5 ? 'Unlocked' : 'Level 5 required'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Shop -->
+                            <div class="bg-gradient-to-br from-yellow-900/50 to-yellow-700/50 p-8 rounded-2xl border-2 border-yellow-500 hover:border-yellow-300 transition-all cursor-pointer hover:scale-105"
+                                 onclick="gameState.mode = 'shop'; render();">
+                                <div class="text-6xl mb-4 text-center">🏪</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Item Shop</h3>
+                                <p class="text-center text-yellow-100 mb-4">Buy power-ups and boost your performance</p>
+                            </div>
+                            
+                            <!-- Stats -->
+                            <div class="bg-gradient-to-br from-green-900/50 to-green-700/50 p-8 rounded-2xl border-2 border-green-500 hover:border-green-300 transition-all cursor-pointer hover:scale-105"
+                                 onclick="gameState.mode = 'stats'; render();">
+                                <div class="text-6xl mb-4 text-center">📊</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Statistics</h3>
+                                <p class="text-center text-green-100 mb-4">View your progress and achievements</p>
+                            </div>
+                            
+                            <!-- Daily Challenge -->
+                            <div class="bg-gradient-to-br from-pink-900/50 to-pink-700/50 p-8 rounded-2xl border-2 border-pink-500 hover:border-pink-300 transition-all">
+                                <div class="text-6xl mb-4 text-center">📅</div>
+                                <h3 class="text-3xl font-bold mb-2 text-center">Daily Challenge</h3>
+                                <p class="text-center text-pink-100 mb-2">Answer 10 questions correctly</p>
+                                <div class="text-center text-sm">
+                                    ${gameState.dailyChallengeCompleted ? 
+                                        '<div class="text-green-400">✓ Completed!</div>' : 
+                                        `<div>${gameState.dailyChallenge ? gameState.dailyChallenge.progress : 0}/10</div>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Domain Mastery -->
+                        <div class="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-sm p-6 rounded-2xl shadow-2xl border-2 border-purple-500">
+                            <h3 class="text-2xl font-bold mb-4">📚 Domain Mastery</h3>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                ${Object.entries(gameState.domainMastery).map(([domain, mastery]) => `
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span>${domain}</span>
+                                            <span>${mastery}%</span>
+                                        </div>
+                                        <div class="h-2 bg-black/30 rounded-full overflow-hidden">
+                                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all" style="width: ${mastery}%"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBattle() {
+            const question = gameState.currentQuestion;
+            const isBattle = gameState.mode === 'arena' || gameState.mode === 'boss';
+            const battle = gameState.currentBattle;
+            
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-5xl mx-auto">
+                        ${isBattle ? `
+                            <!-- Battle Arena -->
+                            <div class="bg-gradient-to-r from-red-900/80 to-orange-900/80 backdrop-blur-sm p-6 rounded-2xl mb-6 border-2 ${battle.isBoss ? 'border-purple-500 boss-entrance' : 'border-red-500'}">
+                                <div class="grid md:grid-cols-2 gap-8">
+                                    <!-- Player -->
+                                    <div class="text-center">
+                                        <div class="text-6xl mb-2">${gameState.player.character.icon}</div>
+                                        <div class="text-xl font-bold mb-2">${gameState.player.name}</div>
+                                        <div class="mb-2">
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span>❤️ HP</span>
+                                                <span>${gameState.player.hp}/${gameState.player.maxHP}</span>
+                                            </div>
+                                            <div class="h-4 bg-black/50 rounded-full overflow-hidden">
+                                                <div class="hp-bar h-full" style="width: ${(gameState.player.hp / gameState.player.maxHP) * 100}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-sm">⚔️ Attack: ${gameState.player.attack}</div>
+                                    </div>
+                                    
+                                    <!-- Enemy -->
+                                    <div class="text-center">
+                                        <div class="text-6xl mb-2">${battle.isBoss ? '🐲' : '👾'}</div>
+                                        <div class="text-xl font-bold mb-2">${battle.enemyName}</div>
+                                        <div class="mb-2">
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span>❤️ HP</span>
+                                                <span>${Math.max(0, battle.enemyHP)}/${battle.enemyMaxHP}</span>
+                                            </div>
+                                            <div class="h-4 bg-black/50 rounded-full overflow-hidden">
+                                                <div class="hp-bar h-full" style="width: ${(battle.enemyHP / battle.enemyMaxHP) * 100}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-sm">⚔️ Attack: ${battle.enemyAttack}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Question Card -->
+                        <div class="bg-gradient-to-br from-purple-900/80 to-pink-900/80 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-2 border-purple-500 mb-6">
+                            <div class="flex gap-2 mb-4 flex-wrap">
+                                <span class="px-3 py-1 bg-purple-600 rounded-full text-sm font-semibold">
+                                    ${question.domain}
+                                </span>
+                                <span class="px-3 py-1 ${
+                                    question.difficulty === 'easy' ? 'bg-green-600' :
+                                    question.difficulty === 'medium' ? 'bg-yellow-600' :
+                                    question.difficulty === 'hard' ? 'bg-red-600' :
+                                    'bg-gradient-to-r from-purple-600 to-pink-600'
+                                } rounded-full text-sm font-semibold">
+                                    ${question.difficulty === 'boss' ? '👑 BOSS' : question.difficulty.toUpperCase()}
+                                </span>
+                                ${question.isBoss ? '<span class="px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full text-sm font-bold">⚡ EPIC QUESTION</span>' : ''}
+                            </div>
+                            
+                            <div class="prose prose-invert max-w-none mb-6">
+                                <p class="text-xl leading-relaxed">${question.question}</p>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                ${question.options.map((option, index) => {
+                                    const isSelected = gameState.selectedAnswer === index;
+                                    const isCorrect = index === question.correct;
+                                    const showAnswer = gameState.showExplanation;
+                                    const isEliminated = gameState.eliminatedAnswers && gameState.eliminatedAnswers.includes(index);
+                                    
+                                    let classes = 'block p-4 border-2 rounded-lg cursor-pointer transition-all ';
+                                    if (isEliminated) {
+                                        classes += 'opacity-30 cursor-not-allowed border-gray-600';
+                                    } else if (showAnswer) {
+                                        if (isCorrect) {
+                                            classes += 'border-green-500 bg-green-900/50';
+                                        } else if (isSelected && !isCorrect) {
+                                            classes += 'border-red-500 bg-red-900/50 shake';
+                                        } else {
+                                            classes += 'border-gray-600';
+                                        }
+                                    } else if (isSelected) {
+                                        classes += 'border-purple-500 bg-purple-900/50';
+                                    } else {
+                                        classes += 'border-gray-600 hover:border-purple-400';
+                                    }
+                                    
+                                    return `
+                                        <div class="${classes}"
+                                             onclick="${!showAnswer && !isEliminated ? `submitAnswer(${index})` : ''}">
+                                            <div class="flex items-start gap-3">
+                                                <div class="flex-shrink-0">
+                                                    ${showAnswer ? (isCorrect ? '✅' : isSelected ? '❌' : '') : ''}
+                                                </div>
+                                                <span class="flex-1">${String.fromCharCode(65 + index)}. ${option}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            
+                            ${gameState.showExplanation ? `
+                                <div class="bg-blue-900/50 border-l-4 border-blue-500 p-6 rounded-lg mb-6">
+                                    <h4 class="font-bold text-lg mb-2 flex items-center gap-2">
+                                        💡 Explanation
+                                    </h4>
+                                    <p class="leading-relaxed">${question.explanation}</p>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button onclick="nextQuestion()" 
+                                            class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:scale-105 transition-transform">
+                                        ${isBattle && battle.enemyHP > 0 ? 'Next Round ⚔️' : 'Continue ➡️'}
+                                    </button>
+                                    <button onclick="gameState.mode = 'main_menu'; render();" 
+                                            class="ml-4 px-8 py-4 bg-gray-700 text-white rounded-xl font-bold text-lg hover:bg-gray-600 transition-all">
+                                        Return to Menu
+                                    </button>
+                                </div>
+                            ` : `
+                                <!-- Power-ups -->
+                                <div class="flex gap-2 justify-center flex-wrap">
+                                    ${POWER_UPS.map(powerUp => `
+                                        <button onclick="usePowerUp('${powerUp.id}')" 
+                                                class="px-4 py-2 bg-purple-700 rounded-lg hover:bg-purple-600 transition-all ${gameState.powerUps[powerUp.id] === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                ${gameState.powerUps[powerUp.id] === 0 ? 'disabled' : ''}>
+                                            ${powerUp.icon} ${powerUp.name} (${gameState.powerUps[powerUp.id]})
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShop() {
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="mb-6 flex items-center justify-between">
+                            <h1 class="text-5xl font-bold">🏪 Item Shop</h1>
+                            <button onclick="gameState.mode = 'main_menu'; render();" 
+                                    class="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600">
+                                ← Back
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm p-6 rounded-2xl mb-6 border-2 border-yellow-500">
+                            <div class="text-3xl font-bold">💰 ${gameState.player.coins} Coins</div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${POWER_UPS.map(powerUp => `
+                                <div class="bg-gradient-to-br from-purple-900/50 to-pink-900/50 p-6 rounded-xl border-2 border-purple-500">
+                                    <div class="text-6xl text-center mb-4">${powerUp.icon}</div>
+                                    <h3 class="text-2xl font-bold mb-2 text-center">${powerUp.name}</h3>
+                                    <p class="text-sm text-purple-200 text-center mb-4">${powerUp.desc}</p>
+                                    <div class="text-center mb-4">
+                                        <div class="text-2xl font-bold text-yellow-400">${powerUp.cost} coins</div>
+                                        <div class="text-sm text-purple-200">You have: ${gameState.powerUps[powerUp.id]}</div>
+                                    </div>
+                                    <button onclick="buyPowerUp('${powerUp.id}')" 
+                                            class="w-full py-3 ${gameState.player.coins >= powerUp.cost ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 cursor-not-allowed'} rounded-lg font-bold transition-all"
+                                            ${gameState.player.coins < powerUp.cost ? 'disabled' : ''}>
+                                        Purchase
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStats() {
+            const accuracy = gameState.stats.totalQuestions > 0 ? 
+                Math.round((gameState.stats.correctAnswers / gameState.stats.totalQuestions) * 100) : 0;
+            
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-7xl mx-auto">
+                        <div class="mb-6 flex items-center justify-between">
+                            <h1 class="text-5xl font-bold">📊 Statistics & Achievements</h1>
+                            <button onclick="gameState.mode = 'main_menu'; render();" 
+                                    class="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600">
+                                ← Back
+                            </button>
+                        </div>
+                        
+                        <!-- Stats Grid -->
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                            <div class="bg-gradient-to-br from-blue-900/50 to-blue-700/50 p-6 rounded-xl border-2 border-blue-500">
+                                <div class="text-4xl font-bold mb-2">${gameState.stats.totalQuestions}</div>
+                                <div class="text-purple-200">Total Questions</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-900/50 to-green-700/50 p-6 rounded-xl border-2 border-green-500">
+                                <div class="text-4xl font-bold mb-2">${accuracy}%</div>
+                                <div class="text-purple-200">Accuracy</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-yellow-900/50 to-yellow-700/50 p-6 rounded-xl border-2 border-yellow-500">
+                                <div class="text-4xl font-bold mb-2">${gameState.stats.bestStreak}</div>
+                                <div class="text-purple-200">Best Streak</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-900/50 to-purple-700/50 p-6 rounded-xl border-2 border-purple-500">
+                                <div class="text-4xl font-bold mb-2">${gameState.bossesDefeated.length}</div>
+                                <div class="text-purple-200">Bosses Defeated</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Achievements -->
+                        <div class="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-sm p-6 rounded-2xl border-2 border-purple-500 mb-6">
+                            <h2 class="text-3xl font-bold mb-6">🏆 Achievements (${gameState.achievements.length}/${ACHIEVEMENTS.length})</h2>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${ACHIEVEMENTS.map(achievement => {
+                                    const unlocked = gameState.unlockedAchievements.has(achievement.id);
+                                    return `
+                                        <div class="p-4 rounded-lg ${unlocked ? 'bg-yellow-900/50 border-2 border-yellow-500' : 'bg-gray-900/50 border-2 border-gray-700'} ${unlocked ? '' : 'opacity-50'}">
+                                            <div class="flex items-start gap-3">
+                                                <div class="text-4xl ${unlocked ? 'sparkle' : ''}">${achievement.icon}</div>
+                                                <div class="flex-1">
+                                                    <div class="font-bold">${achievement.name}</div>
+                                                    <div class="text-sm text-purple-200">${achievement.desc}</div>
+                                                    ${unlocked ? '<div class="text-xs text-green-400 mt-1">✓ Unlocked</div>' : '<div class="text-xs text-gray-400 mt-1">🔒 Locked</div>'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Domain Performance -->
+                        <div class="bg-gradient-to-r from-purple-900/80 to-pink-900/80 backdrop-blur-sm p-6 rounded-2xl border-2 border-purple-500">
+                            <h2 class="text-3xl font-bold mb-6">📚 Domain Performance</h2>
+                            <div class="space-y-4">
+                                ${Object.entries(gameState.stats.questionsPerDomain).map(([domain, total]) => {
+                                    const correct = gameState.stats.correctPerDomain[domain] || 0;
+                                    const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+                                    return `
+                                        <div>
+                                            <div class="flex justify-between mb-2">
+                                                <span class="font-bold">${domain}</span>
+                                                <span>${correct}/${total} (${percentage}%)</span>
+                                            </div>
+                                            <div class="h-3 bg-black/30 rounded-full overflow-hidden">
+                                                <div class="${percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'} h-full transition-all" 
+                                                     style="width: ${percentage}%"></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== INITIALIZATION ====================
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            render();
+        });
+
+        // Auto-save every 30 seconds
+        setInterval(saveGame, 30000);
+    </script>
+</body>
+</html>
